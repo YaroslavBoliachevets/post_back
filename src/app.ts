@@ -3,6 +3,16 @@ import "dotenv/config";
 // import { prisma } from "./lib/prisma.ts";
 // import { Express } from "express";
 
+import { PrismaClient } from "./generated/prisma/client/client";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+import dotenv from "dotenv";
+
+const connectionString = process.env.DATABASE_URL;
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
+// console.log(prisma);
+
 import express from "express";
 
 const app = express();
@@ -12,15 +22,16 @@ app.get("/", (req: any, res: any) => {
 	res.send("helo world");
 });
 
-// const start = async () => {
-// 	try {
-// 		await prisma.$connect();
-// 		console.log("connected to db");
+const start = async () => {
+	try {
+		await prisma.$connect();
+		console.log("connected to db");
 
-// 		app.listen(PORT, () => {
-// 			console.log(`Server started on port ${PORT}`);
-// 		});
-// 	} catch (error: any) {}
-// };
+		app.listen(PORT, () => {
+			console.log(`Server started on port ${PORT}`);
+		});
+	} catch (error: any) {}
+};
 
+start();
 // app.listen(PORT, console.log(`Server started on port ${PORT}`));
