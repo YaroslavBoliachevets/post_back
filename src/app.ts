@@ -1,13 +1,8 @@
 import "dotenv/config";
-import { PrismaClient } from "./generated/prisma/client/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import prisma from "./prisma/client";
 import express from "express";
 import ErrorHandler from "./middleware/ErrorHandlingMiddleware";
 const cors = require("cors");
-
-const connectionString = process.env.DATABASE_URL;
-const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
 
 const app = express();
 app.use(cors());
@@ -24,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 
 const start = async () => {
 	try {
+		// console.log(prisma, "prisma");
 		await prisma.$connect();
 		console.log("connected to db");
 
