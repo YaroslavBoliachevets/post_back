@@ -5,7 +5,6 @@ import mailService from "./mailService";
 import tokenService from "./tokenService";
 import UserDto from "../dtos/userDot";
 import ApiError from "../error/ApiError";
-import { NextFunction } from "express";
 
 class userService {
 	async registration(email: string, password: string) {
@@ -20,7 +19,10 @@ class userService {
 		const newUser = await prisma.user.create({
 			data: { email, password: hashedPassword, activationLink },
 		});
-		await mailService.sendActivationMail(email, activationLink);
+		await mailService.sendActivationMail(
+			email,
+			`${process.env.API_URL}/api/user/activate/${activationLink}`,
+		);
 		const userDto = new UserDto(newUser);
 		const tokens = tokenService.generateTokens({ ...userDto });
 		await tokenService.saveToken(userDto.id, tokens.refreshToken);
