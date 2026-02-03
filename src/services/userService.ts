@@ -44,9 +44,40 @@ class userService {
 		});
 	}
 
+	async login(email: string, password: string) {
+		const user = await prisma.user.findUnique({ where: { email } });
+		if (!user) throw ApiError.badRequest("user not found");
+		const isPasswordEquals = await bcrypt.compare(password, user.password);
+		if (!isPasswordEquals) throw ApiError.badRequest("wrong password");
+
+		const userDto = new UserDto(user);
+		const tokens = tokenService.generateTokens({ ...userDto });
+		await tokenService.saveToken(user.id, tokens.refreshToken);
+		return { ...tokens, user: userDto };
+	}
+
 	async logout(refreshToken: string) {
 		const token = await tokenService.removeToken(refreshToken);
 		return token;
+	}
+
+	async refresh(refreshToken: string) {
+		if (!refreshToken) throw ApiError.unauthorisedError();
+		const userData = await tokenService.validateRefreshToken(refreshToken);
+		const tokenFromDb = await tokenService.findToken(refreshToken);
+		if (!userData || !tokenFromDb) {
+			throw ApiError.unauthorisedError();
+		}
+		const user = await prisma.user.findFirst({
+			where: {
+				id: userData.id,
+			},
+		});
+		if (!user) throw ApiError.unauthorisedError();
+		const userDto = new UserDto(user);
+		const token = tokenService.generateTokens({ ...userDto });
+		await tokenService.saveToken(userDto.id, token.refreshToken);
+		return { ...token, user: userDto };
 	}
 }
 

@@ -17,6 +17,25 @@ class tokenService {
 			refreshToken,
 		};
 	}
+
+	validateAccessToken(token: string) {
+		try {
+			const userData = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+			return userData;
+		} catch (error) {
+			return null;
+		}
+	}
+
+	validateRefreshToken(token: string) {
+		try {
+			const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+			return userData;
+		} catch (error) {
+			return null;
+		}
+	}
+
 	async saveToken(userId: number, refreshToken: string) {
 		const tokenData = await prisma.token.findUnique({
 			where: { userId },
@@ -38,6 +57,13 @@ class tokenService {
 		return await prisma.token.delete({
 			where: { refreshToken: token },
 		});
+	}
+
+	async findToken(token: string) {
+		const findedToken = await prisma.token.findUnique({
+			where: { refreshToken: token },
+		});
+		if (!findedToken) return null;
 	}
 }
 
