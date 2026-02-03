@@ -19,7 +19,7 @@ class mailService {
 		await this.transporter.sendMail({
 			from: process.env.SMTP_HOST,
 			to,
-			subject: "account activision on" + process.env.API_URL,
+			subject: "account activision on " + process.env.API_URL,
 			text: "",
 			html: `
 			<div>

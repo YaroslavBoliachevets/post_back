@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../error/ApiError";
 import userService from "../services/userService";
+import prisma from "../prisma/client";
+const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
+import UserDto from "../dtos/userDot";
+import tokenService from "../services/tokenService";
 
 class UserController {
 	async registration(req: Request, res: Response, next: NextFunction) {
@@ -23,7 +27,23 @@ class UserController {
 		}
 	}
 
-	async login(req: Request, res: Response) {}
+	async login(req: Request, res: Response, next: NextFunction) {
+		const { email, password } = req.body;
+		const user = await prisma.user.findUnique({
+			where: { email: email },
+		});
+		if (!user) {
+			return next(ApiError.badRequest("Email not found"));
+		}
+		const isPassowrdEquals = await bcrypt.compare(password, user.password);
+		if (!isPassowrdEquals) {
+			return next(ApiError.badRequest("Wrong password"));
+		}
+		const userDto = new UserDto(user);
+		const tokens = tokenService.generateTokens({ ...userDto });
+		await tokenService.saveToken(userDto.id, tokens.refreshToken);
+		return res.json({ ...tokens, user: userDto });
+	}
 	async logout(req: Request, res: Response) {}
 
 	async activate(req: Request, res: Response, next: NextFunction) {
