@@ -38,7 +38,7 @@ class UserController {
 			secure: true,
 			sameSite: "none",
 		});
-		return res.json({ userData });
+		return res.json(userData);
 	}
 	async logout(req: Request, res: Response, next: NextFunction) {
 		try {
@@ -69,8 +69,12 @@ class UserController {
 			res.cookie("refreshToken", userData.refreshToken, {
 				maxAge: 30 * 24 * 60 * 60 * 1000,
 				httpOnly: true,
-				secure: true,
-				sameSite: "none",
+				// для http нужно след
+				// secure: true,
+				// sameSite: "none",
+				// это отлько для локалхост
+				secure: false,
+				sameSite: "lax",
 			});
 			return res.json(userData);
 		} catch (error) {

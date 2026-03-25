@@ -6,8 +6,11 @@ import ApiError from "../error/ApiError";
 class PostsController {
 	async create(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { userId, title, body } = req.body;
-			const newPost = await prisma.posts.create({ data: { title, body, userId } });
+			const { title, body, userId } = req.body;
+			const newPost = await prisma.posts.create({
+				data: { title, body, userId },
+				include: { user: { select: { email: true } } },
+			});
 			return res.json(newPost);
 		} catch (e: any) {
 			next(ApiError.badRequest(e.message));
@@ -26,7 +29,7 @@ class PostsController {
 					body,
 				},
 			});
-			return updatedPost;
+			return res.json(updatedPost);
 		} catch (e: any) {
 			next(ApiError.badRequest(e.message));
 		}
@@ -52,8 +55,19 @@ class PostsController {
 				orderBy: { id: "asc" },
 				take: currentLimit,
 				skip: offset,
+				include: {
+					user: {
+						select: {
+							email: true,
+						},
+					},
+					_count: {
+						select: { comments: true },
+					},
+				},
 			});
-			return res.json(allPosts);
+			const totalPosts = await prisma.posts.count();
+			return res.json({ posts: allPosts, totalPosts });
 		} catch (e: any) {
 			next(ApiError.badRequest(e.message));
 		}
